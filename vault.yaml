@@ -39,6 +39,7 @@ data:
 
     storage "gcs" {
       bucket = "vault-us-west1"
+      ha_enabled = "true"
     }
     
     ui = true
