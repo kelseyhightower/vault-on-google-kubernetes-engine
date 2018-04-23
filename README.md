@@ -45,7 +45,6 @@ VAULT_1_ADDRESS=(gcloud compute addresses describe vault-1 \
   --global --format='value(address)')
 ```
 
-
 ### Create GCS bucket:
 
 ```
@@ -150,12 +149,12 @@ kubectl create configmap vault --from-file vault.hcl
 
 ```
 kubectl create configmap vault-0 \
-  --from-literal api-addr=https://0.${VAULT_HOSTNAME}:8200
+  --from-literal api-addr=https://${VAULT_0_ADDRESS}:8200
 ```
 
 ```
 kubectl create configmap vault-1 \
-  --from-literal api-addr=https://1.${VAULT_HOSTNAME}:8200
+  --from-literal api-addr=https://${VAULT_1_ADDRESS}:8200
 ```
 
 ### Deploy Vault
@@ -167,11 +166,7 @@ kubectl apply -f vault.yaml
 Initialize Vault:
 
 ```
-kubectl port-forward vault-0-74495d75d4-bmjt9 8200:8200
-```
-
-```
-source vault-init.env
+source vault.env
 ```
 
 ```
