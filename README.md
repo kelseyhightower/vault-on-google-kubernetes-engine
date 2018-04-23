@@ -45,13 +45,6 @@ VAULT_1_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-1 \
   --global --format='value(address)')
 ```
 
-```
-declare -A ADDRESSES
-ADDRESSES["vault"]=${VAULT_LOAD_BALANCER_IP}
-ADDRESSES["vault-0"]=${VAULT_0_LOAD_BALANCER_IP}
-ADDRESSES["vault-1"]=${VAULT_1_LOAD_BALANCER_IP}
-```
-
 ### Create GCS bucket:
 
 ```
@@ -63,12 +56,6 @@ Create the `vault` service account:
 ```
 gcloud iam service-accounts create vault-server \
   --display-name "vault service account"
-```
-
-```
-gcloud iam service-accounts keys create \
-  service-account.json \
-  --iam-account vault-server@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
 ```
@@ -175,15 +162,14 @@ mkdir services
 ```
 
 ```
-for k in "${!ADDRESSES[@]}"; do
-cat > services/${k}.yaml <<EOF
+cat > services/vault.yaml <<EOF
 apiVersion: v1
 kind: Service
 metadata:
-  name: ${k}
+  name: vault
 spec:
   type: LoadBalancer
-  loadBalancerIP: ${ADDRESSES[$k]}
+  loadBalancerIP: ${VAULT_LOAD_BALANCER_IP}
   ports:
     - name: http
       port: 8200
@@ -191,6 +177,46 @@ spec:
       port: 8201
   selector:
     app: vault
+EOF
+```
+
+```
+cat > services/vault-0.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-0
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${VAULT_0_LOAD_BALANCER_IP}
+  ports:
+    - name: http
+      port: 8200
+    - name: server
+      port: 8201
+  selector:
+    app: vault
+    instance: "0"
+EOF
+```
+
+```
+cat > services/vault-1.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-1
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${VAULT_1_LOAD_BALANCER_IP}
+  ports:
+    - name: http
+      port: 8200
+    - name: server
+      port: 8201
+  selector:
+    app: vault
+    instance: "1"
 EOF
 ```
 
