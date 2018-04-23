@@ -184,10 +184,20 @@ kubectl create configmap vault-1 \
 ```
 kubectl apply -f vault.yaml
 ```
+```
+deployment "vault-0" created
+deployment "vault-1" created
+```
+
+#### Create the Vault Services
+
+Create a directory to hold the Vault service configs:
 
 ```
 mkdir services
 ```
+
+Generate the `vault`, `vault-0`, and `vault-1` service configurations that expose the Vault instances using an external loadbalancer.
 
 ```
 cat > services/vault.yaml <<EOF
@@ -249,6 +259,8 @@ spec:
   publishNotReadyAddresses: true
 EOF
 ```
+
+Create the Vault services
 
 ```
 kubectl apply -f services
