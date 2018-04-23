@@ -84,7 +84,7 @@ cfssl gencert \
 Create Kubernetes secret:
 
 ```
-cat ca.pem vault.pem > vault-combined.pem
+cat vault.pem ca.pem > vault-combined.pem
 ```
 
 ```
@@ -116,4 +116,38 @@ storage "gcs" {
 
 ui = true
 EOF
+```
+
+```
+kubectl create configmap vault --from-file vault.hcl
+```
+
+```
+kubectl create configmap vault-0 \
+  --from-literal api-addr=https://0.${VAULT_HOSTNAME}:8200
+```
+
+```
+kubectl create configmap vault-1 \
+  --from-literal api-addr=https://1.${VAULT_HOSTNAME}:8200
+```
+
+### Deploy Vault
+
+```
+kubectl apply -f vault.yaml
+```
+
+Initialize Vault:
+
+```
+kubectl port-forward vault-0-74495d75d4-bmjt9 8200:8200
+```
+
+```
+source vault-init.env
+```
+
+```
+vault operator init
 ```

@@ -17,7 +17,7 @@ spec:
       targetPort: 8200
   selector:
     app: vault
-    instance: 0
+    instance: "0"
 ---
 apiVersion: v1
 kind: Service
@@ -38,7 +38,7 @@ spec:
       targetPort: 8200
   selector:
     app: vault
-    instance: 1
+    instance: "1"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -46,18 +46,18 @@ metadata:
   name: vault-0
   labels:
     app: vault
-    instance: 0
+    instance: "0"
 spec:
   selector:
     matchLabels:
       app: vault
-      instance: 0
+      instance: "0"
   replicas: 1
   template:
     metadata:
       labels:
         app: vault
-        instance: 0
+        instance: "0"
     spec:
       containers:
         - name: vault
@@ -107,18 +107,18 @@ metadata:
   name: vault-1
   labels:
     app: vault
-    instance: 1
+    instance: "1"
 spec:
   selector:
     matchLabels:
       app: vault
-      instance: 1
+      instance: "1"
   replicas: 1
   template:
     metadata:
       labels:
         app: vault
-        instance: 1
+        instance: "1"
     spec:
       containers:
         - name: vault
