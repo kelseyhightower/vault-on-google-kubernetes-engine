@@ -108,7 +108,21 @@ cfssl gencert \
   vault-csr.json | cfssljson -bare vault
 ```
 
-Create Kubernetes secret:
+### Deploy Vault
+
+```
+gcloud container clusters get-credentials vault
+```
+
+```
+gcloud container clusters list
+```
+```
+NAME   LOCATION    MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+vault  us-west1-c  1.9.6-gke.1     XX.XXX.XXX.XXX  n1-standard-2  1.9.6-gke.1   3          RUNNING
+```
+
+Create `vault` secret to hold the Vault TLS certificates:
 
 ```
 cat vault.pem ca.pem > vault-combined.pem
@@ -121,7 +135,7 @@ kubectl create secret generic vault \
   --from-file=vault-key.pem
 ```
 
-Create `vault` configmap:
+Generate the `vault.hcl` configuration file and store it in the `vault` configmap:
 
 ```
 cat > vault.hcl <<EOF
@@ -145,21 +159,27 @@ ui = true
 EOF
 ```
 
+Create the `vault` configmap:
+
 ```
 kubectl create configmap vault --from-file vault.hcl
 ```
+
+Create the `vault-0` configmap which holds the loadbalancer IP that points to the `vault-0` Vault instance:
 
 ```
 kubectl create configmap vault-0 \
   --from-literal api-addr=https://${VAULT_0_LOAD_BALANCER_IP}:8200
 ```
 
+Create the `vault-1` configmap which holds the loadbalancer IP that points to the `vault-1` Vault instance:
+
 ```
 kubectl create configmap vault-1 \
   --from-literal api-addr=https://${VAULT_1_LOAD_BALANCER_IP}:8200
 ```
 
-### Deploy Vault
+#### Create the Vault Deployments
 
 ```
 kubectl apply -f vault.yaml
