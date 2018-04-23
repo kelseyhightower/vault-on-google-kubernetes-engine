@@ -1,107 +1,34 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: vault-0
-  labels:
-    app: vault
-    instance: "0"
+  name: vault
 spec:
-  strategy:
-    type: Recreate
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8200
+    - name: server
+      port: 8201
   selector:
-    matchLabels:
-      app: vault
-      instance: "0"
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: vault
-        instance: "0"
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - vault
-              topologyKey: kubernetes.io/hostname
-      containers:
-        - name: vault
-          image: "vault:0.10.0"
-          env:
-            - name: "VAULT_API_ADDR"
-              valueFrom:
-                configMapKeyRef:
-                  name: vault-0
-                  key: api-addr
-            - name: "VAULT_CLUSTER_ADDR"
-              value: "https://vault-0.default.svc.cluster.local:8201"
-          args:
-            - "server"
-            - "-config=/etc/vault/config/vault.hcl"
-          ports:
-            - name: http
-              containerPort: 8200
-              protocol: "TCP"
-            - name: server
-              containerPort: 8201
-              protocol: "TCP"
-          readinessProbe:
-            exec:
-              command:
-                - vault
-                - status
-                - -client-cert=/etc/vault/tls/vault.pem
-                - -client-key=/etc/vault/tls/vault-key.pem
-                - -ca-cert=/etc/vault/tls/ca.pem
-            initialDelaySeconds: 5
-            periodSeconds: 30
-
-          resources:
-            requests:
-              cpu: "500m"
-              memory: "1Gi"
-          securityContext:
-            capabilities:
-              add:
-                - IPC_LOCK
-          volumeMounts:
-            - name: vault-config
-              mountPath: /etc/vault/config
-            - name: vault-tls
-              mountPath: /etc/vault/tls
-      volumes:
-        - name: vault-config
-          configMap:
-            name: vault
-        - name: vault-tls
-          secret:
-            secretName: vault
+    app: vault
+  publishNotReadyAddresses: true
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: vault-1
+  name: vault
   labels:
     app: vault
-    instance: "1"
 spec:
-  strategy:
-    type: Recreate
+  serviceName: "vault"
   selector:
     matchLabels:
       app: vault
-      instance: "1"
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
         app: vault
-        instance: "1"
     spec:
       affinity:
         podAntiAffinity:
@@ -117,13 +44,17 @@ spec:
         - name: vault
           image: "vault:0.10.0"
           env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: "status.podIP"
             - name: "VAULT_API_ADDR"
               valueFrom:
                 configMapKeyRef:
-                  name: vault-1
+                  name: vault
                   key: api-addr
             - name: "VAULT_CLUSTER_ADDR"
-              value: "https://vault-1.default.svc.cluster.local:8201"
+              value: "https://$(POD_IP):8201"
           args:
             - "server"
             - "-config=/etc/vault/config/vault.hcl"

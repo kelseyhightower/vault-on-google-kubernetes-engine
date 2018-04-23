@@ -75,11 +75,11 @@ Grant access to the vault init keys:
 
 ```
 gcloud kms keys add-iam-policy-binding \
-    vault-init \
-    --location global \
-    --keyring vault \
-    --member serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
-    --role roles/cloudkms.cryptoKeyEncrypterDecrypter
+  vault-init \
+  --location global \
+  --keyring vault \
+  --member serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/cloudkms.cryptoKeyEncrypterDecrypter
 ```
 
 ### Provision a Kubernetes Cluster
@@ -103,27 +103,7 @@ gcloud compute addresses create vault \
 ```
 
 ```
-gcloud compute addresses create vault-0 \
-  --region ${COMPUTE_REGION}
-```
-
-```
-gcloud compute addresses create vault-1 \
-  --region ${COMPUTE_REGION}
-```
-
-```
 VAULT_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault \
-  --region ${COMPUTE_REGION} --format='value(address)')
-```
-
-```
-VAULT_0_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-0 \
-  --region ${COMPUTE_REGION} --format='value(address)')
-```
-
-```
-VAULT_1_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-1 \
   --region ${COMPUTE_REGION} --format='value(address)')
 ```
 
@@ -140,7 +120,7 @@ cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname="vault,vault.default.svc.cluster.local,0.vault.default.svc.cluster.local,1.vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_LOAD_BALANCER_IP},${VAULT_0_LOAD_BALANCER_IP},${VAULT_1_LOAD_BALANCER_IP}" \
+  -hostname="vault,vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_LOAD_BALANCER_IP}" \
   -profile=default \
   vault-csr.json | cfssljson -bare vault
 ```
@@ -179,10 +159,8 @@ cat > vault.hcl <<EOF
 listener "tcp" {
   address = "0.0.0.0:8200"
   tls_cert_file = "/etc/vault/tls/vault.pem"
-  tls_client_ca_file = "/etc/vault/tls/ca.pem"
   tls_key_file = "/etc/vault/tls/vault-key.pem"
   tls_min_version = "tls12"
-  tls_require_and_verify_client_cert = "true"
 }
 
 storage "gcs" {
@@ -197,21 +175,9 @@ EOF
 Create the `vault` configmap:
 
 ```
-kubectl create configmap vault --from-file vault.hcl
-```
-
-Create the `vault-0` configmap which holds the loadbalancer IP that points to the `vault-0` Vault instance:
-
-```
-kubectl create configmap vault-0 \
-  --from-literal api-addr=https://${VAULT_0_LOAD_BALANCER_IP}:8200
-```
-
-Create the `vault-1` configmap which holds the loadbalancer IP that points to the `vault-1` Vault instance:
-
-```
-kubectl create configmap vault-1 \
-  --from-literal api-addr=https://${VAULT_1_LOAD_BALANCER_IP}:8200
+kubectl create configmap vault \
+  --from-file vault.hcl \
+  --from-literal api-addr=https://${VAULT_LOAD_BALANCER_IP}:8200
 ```
 
 #### Create the Vault Deployments
@@ -232,14 +198,14 @@ Create a directory to hold the Vault service configs:
 mkdir services
 ```
 
-Generate the `vault`, `vault-0`, and `vault-1` service configurations that expose the Vault instances using an external loadbalancer.
+Generate the `vault` service configuration that expose Vault using an external loadbalancer.
 
 ```
-cat > services/vault.yaml <<EOF
+cat > vault-load-balancer.yaml <<EOF
 apiVersion: v1
 kind: Service
 metadata:
-  name: vault
+  name: vault-load-balancer
 spec:
   type: LoadBalancer
   loadBalancerIP: ${VAULT_LOAD_BALANCER_IP}
@@ -253,58 +219,14 @@ spec:
 EOF
 ```
 
-```
-cat > services/vault-0.yaml <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: vault-0
-spec:
-  type: LoadBalancer
-  loadBalancerIP: ${VAULT_0_LOAD_BALANCER_IP}
-  ports:
-    - name: http
-      port: 8200
-    - name: server
-      port: 8201
-  selector:
-    app: vault
-    instance: "0"
-  publishNotReadyAddresses: true
-EOF
-```
-
-```
-cat > services/vault-1.yaml <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: vault-1
-spec:
-  type: LoadBalancer
-  loadBalancerIP: ${VAULT_1_LOAD_BALANCER_IP}
-  ports:
-    - name: http
-      port: 8200
-    - name: server
-      port: 8201
-  selector:
-    app: vault
-    instance: "1"
-  publishNotReadyAddresses: true
-EOF
-```
-
 Create the Vault services
 
 ```
-kubectl apply -f services
+kubectl apply -f vault-load-balancer.yaml
 ```
 
 ```
-service "vault-0" created
-service "vault-1" created
-service "vault" created
+service "vault-load-balancer" created
 ```
 
 ### Initialize Vault
@@ -338,50 +260,8 @@ readinessProbe:
 ```
 
 
-In a new terminal set up a port forward to `vault-0`:
-
-```
-kubectl port-forward $(kubectl get pods -l instance=0 \
-  -o jsonpath={.items[0].metadata.name}) \
-  8200:8200
-```
-
-In a seperate terminal connect to the `vault-0` instance and [initialize it](https://www.vaultproject.io/intro/getting-started/deploy.html#initializing-the-vault):
-
-```
-source vault-port-forward.env
-```
-
-```
-vault operator init
-```
-
-With Vault initialized [unseal](https://www.vaultproject.io/intro/getting-started/deploy.html#seal-unseal) the `vault-0` instance:
-
 ```
 vault operator unseal
-```
-
-Switch back to the terminal where `kubectl port-foward` is running and kill it
-
-```
-^C
-```
-
-Next we need to unseal the `vault-1` instance.
-
-In a new terminal set up a port forward to `vault-1`:
-
-```
-kubectl port-forward $(kubectl get pods -l instance=1 \
-  -o jsonpath={.items[0].metadata.name}) \
-  8200:8200
-```
-
-In a seperate terminal unseal the `vault-1` instance:
-
-```
-source vault-port-forward.env
 ```
 
 ```
