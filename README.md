@@ -186,8 +186,8 @@ kubectl create configmap vault \
 kubectl apply -f vault.yaml
 ```
 ```
-deployment "vault-0" created
-deployment "vault-1" created
+service "vault" created
+statefulset "vault" created
 ```
 
 #### Create the Vault Services
