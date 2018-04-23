@@ -28,6 +28,20 @@ COMPUTE_REGION=$(gcloud config get-value compute/region)
 GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
 ```
 
+### 
+
+```
+gcloud kms keyrings create vault \
+  --location global
+```
+
+```
+gcloud kms keys create vault-init \
+  --location global \
+  --keyring vault \
+  --purpose encryption
+```
+
 ### Create GCS bucket:
 
 ```
@@ -55,6 +69,17 @@ gsutil iam ch \
 gsutil iam ch \
   serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com:legacyBucketReader \
   gs://${GCS_BUCKET_NAME}
+```
+
+Grant access to the vault init keys:
+
+```
+gcloud kms keys add-iam-policy-binding \
+    vault-init \
+    --location global \
+    --keyring vault \
+    --member serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
+    --role roles/cloudkms.cryptoKeyEncrypterDecrypter
 ```
 
 ### Provision a Kubernetes Cluster
