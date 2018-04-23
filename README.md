@@ -270,7 +270,7 @@ Next we need to unseal the `vault-1` instance.
 Set up a port forward to `vault-1`:
 
 ```
-kubectl port-forward $(kubectl get pods -l instance=0 \
+kubectl port-forward $(kubectl get pods -l instance=1 \
   -o jsonpath={.items[0].metadata.name}) \
   8200:8200
 ```
