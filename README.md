@@ -284,6 +284,8 @@ kubectl port-forward $(kubectl get pods -l instance=0 \
   8200:8200
 ```
 
+In a seperate terminal connect to the `vault-0` instance and [initialize it](https://www.vaultproject.io/intro/getting-started/deploy.html#initializing-the-vault):
+
 ```
 source vault-port-forward.env
 ```
@@ -292,13 +294,13 @@ source vault-port-forward.env
 vault operator init
 ```
 
-With Vault initialized unseal the `vault-0` instance:
+With Vault initialized [unseal](https://www.vaultproject.io/intro/getting-started/deploy.html#seal-unseal) the `vault-0` instance:
 
 ```
 vault operator unseal
 ```
 
-Switch back to the tab where `kubectl port-foward` is running and kill it
+Switch back to the terminal where `kubectl port-foward` is running and kill it
 
 ```
 ^C
@@ -306,7 +308,7 @@ Switch back to the tab where `kubectl port-foward` is running and kill it
 
 Next we need to unseal the `vault-1` instance.
 
-Set up a port forward to `vault-1`:
+In a new terminal set up a port forward to `vault-1`:
 
 ```
 kubectl port-forward $(kubectl get pods -l instance=1 \
@@ -314,7 +316,7 @@ kubectl port-forward $(kubectl get pods -l instance=1 \
   8200:8200
 ```
 
-In a new tab unseal the `vault-1` instance:
+In a seperate terminal unseal the `vault-1` instance:
 
 ```
 source vault-port-forward.env
