@@ -1,6 +1,6 @@
 # Vault on Google Kubernetes Engine
 
-This tutorial walks you through provisioning a two node [HashiCorp Vault](https://www.vaultproject.io/intro/index.html) cluster on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine)
+This tutorial walks you through provisioning a two node [HashiCorp Vault](https://www.vaultproject.io/intro/index.html) cluster on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine).
 
 ## Cluster Features
 
@@ -33,12 +33,16 @@ GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
 gsutil mb gs://${GCS_BUCKET_NAME}
 ```
 
+### Create the Vault IAM Service Account
+
 Create the `vault` service account:
 
 ```
 gcloud iam service-accounts create vault-server \
   --display-name "vault service account"
 ```
+
+Grant access to the vault storage bucket:
 
 ```
 gsutil iam ch \
