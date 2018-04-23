@@ -20,38 +20,6 @@ COMPUTE_REGION=$(gcloud config get-value compute/region)
 GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
 ```
 
-### Provision IP Address
-
-```
-gcloud compute addresses create vault \
-  --region ${COMPUTE_REGION}
-```
-
-```
-gcloud compute addresses create vault-0 \
-  --region ${COMPUTE_REGION}
-```
-
-```
-gcloud compute addresses create vault-1 \
-  --region ${COMPUTE_REGION}
-```
-
-```
-VAULT_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault \
-  --region ${COMPUTE_REGION} --format='value(address)')
-```
-
-```
-VAULT_0_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-0 \
-  --region ${COMPUTE_REGION} --format='value(address)')
-```
-
-```
-VAULT_1_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-1 \
-  --region ${COMPUTE_REGION} --format='value(address)')
-```
-
 ### Create GCS bucket:
 
 ```
@@ -87,6 +55,38 @@ gcloud container clusters create vault \
   --service-account vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
   --num-nodes 3 \
   --zone ${COMPUTE_ZONE}
+```
+
+### Provision IP Address
+
+```
+gcloud compute addresses create vault \
+  --region ${COMPUTE_REGION}
+```
+
+```
+gcloud compute addresses create vault-0 \
+  --region ${COMPUTE_REGION}
+```
+
+```
+gcloud compute addresses create vault-1 \
+  --region ${COMPUTE_REGION}
+```
+
+```
+VAULT_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault \
+  --region ${COMPUTE_REGION} --format='value(address)')
+```
+
+```
+VAULT_0_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-0 \
+  --region ${COMPUTE_REGION} --format='value(address)')
+```
+
+```
+VAULT_1_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-1 \
+  --region ${COMPUTE_REGION} --format='value(address)')
 ```
 
 ### Generate TLS Certificates
