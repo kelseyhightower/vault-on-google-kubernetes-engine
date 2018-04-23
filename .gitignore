@@ -2,3 +2,4 @@
 *.csr
 vault.hcl
 *.swp
+service-account.json
