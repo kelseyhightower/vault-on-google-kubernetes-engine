@@ -1,11 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vault
-  labels:
-    name: vault
+  name: vault-0
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: http
       port: 8200
@@ -19,46 +17,120 @@ spec:
       targetPort: 8200
   selector:
     app: vault
+    instance: 0
 ---
 apiVersion: v1
-kind: ConfigMap
+kind: Service
 metadata:
-  name: vault
-data:
-  vault.hcl: |
-    disable_mlock = true
-
-    listener "tcp" {
-      address = "0.0.0.0:8200"
-      tls_cert_file = "/etc/vault/tls/vault.pem"
-      tls_client_ca_file = "/etc/vault/tls/ca.pem"
-      tls_key_file = "/etc/vault/tls/vault-key.pem"
-      tls_min_version = "tls12"
-      tls_require_and_verify_client_cert = "true"
-    }
-
-    storage "gcs" {
-      bucket = "vault-us-west1"
-      ha_enabled = "true"
-    }
-    
-    ui = true
----
-apiVersion: apps/v1beta1
-kind: StatefulSet
-metadata:
-  name: vault
+  name: vault-1
 spec:
-  serviceName: vault
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8200
+      protocol: "TCP"
+    - name: server
+      port: 8201
+      protocol: "TCP"
+    - name: ui
+      port: 443
+      protocol: "TCP"
+      targetPort: 8200
+  selector:
+    app: vault
+    instance: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-0
+  labels:
+    app: vault
+    instance: 0
+spec:
+  selector:
+    matchLabels:
+      app: vault
+      instance: 0
   replicas: 1
   template:
     metadata:
       labels:
         app: vault
+        instance: 0
     spec:
       containers:
         - name: vault
           image: "vault:0.10.0"
+          env:
+            - name: "VAULT_API_ADDR"
+              valueFrom:
+                configMapKeyRef:
+                  name: vault-0
+                  key: api-addr
+            - name: "VAULT_CLUSTER_ADDR"
+              value: "https://vault-0.default.svc.cluster.local:8201"
+          args:
+            - "server"
+            - "-config=/etc/vault/config/vault.hcl"
+          ports:
+            - name: http
+              containerPort: 8200
+              protocol: "TCP"
+            - name: server
+              containerPort: 8201
+              protocol: "TCP"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          volumeMounts:
+            - name: vault-config
+              mountPath: /etc/vault/config
+            - name: vault-tls
+              mountPath: /etc/vault/tls
+      volumes:
+        - name: vault-config
+          configMap:
+            name: vault
+        - name: vault-tls
+          secret:
+            secretName: vault
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-1
+  labels:
+    app: vault
+    instance: 1
+spec:
+  selector:
+    matchLabels:
+      app: vault
+      instance: 1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vault
+        instance: 1
+    spec:
+      containers:
+        - name: vault
+          image: "vault:0.10.0"
+          env:
+            - name: "VAULT_API_ADDR"
+              valueFrom:
+                configMapKeyRef:
+                  name: vault-1
+                  key: api-addr
+            - name: "VAULT_CLUSTER_ADDR"
+              value: "https://vault-1.default.svc.cluster.local:8201"
           args:
             - "server"
             - "-config=/etc/vault/config/vault.hcl"

@@ -12,10 +12,18 @@ PROJECT_ID=$(gcloud config get-value project)
 COMPUTE_ZONE=$(gcloud config get-value compute/zone)
 ```
 
+```
+GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
+```
+
+```
+VAULT_HOSTNAME="vault.hightowerlabs.com"
+```
+
 Create GCS bucket:
 
 ```
-gsutil mb gs://${PROJECT_ID}-vault-storage
+gsutil mb gs://${GCS_BUCKET_NAME}
 ```
 
 Create the `vault` service account:
@@ -34,13 +42,13 @@ gcloud iam service-accounts keys create \
 ```
 gsutil iam ch \
   serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com:objectAdmin \
-  gs://${PROJECT_ID}-vault-storage
+  gs://${GCS_BUCKET_NAME}
 ```
 
 ```
 gsutil iam ch \
   serviceAccount:vault-server@${PROJECT_ID}.iam.gserviceaccount.com:legacyBucketReader \
-  gs://${PROJECT_ID}-vault-storage
+  gs://${GCS_BUCKET_NAME}
 ```
 
 ### Provision a Kubernetes Cluster
@@ -63,8 +71,6 @@ Create TLS certificates:
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 ```
 
-VAULT_HOSTNAME="vault.hightowerlabs.com"
-
 ```
 cfssl gencert \
   -ca=ca.pem \
@@ -81,10 +87,33 @@ Create Kubernetes secret:
 cat ca.pem vault.pem > vault-combined.pem
 ```
 
-
 ```
 kubectl create secret generic vault \
   --from-file=ca.pem \
   --from-file=vault.pem=vault-combined.pem \
   --from-file=vault-key.pem
+```
+
+Create `vault` configmap:
+
+```
+cat > vault.hcl <<EOF
+disable_mlock = true
+
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_cert_file = "/etc/vault/tls/vault.pem"
+  tls_client_ca_file = "/etc/vault/tls/ca.pem"
+  tls_key_file = "/etc/vault/tls/vault-key.pem"
+  tls_min_version = "tls12"
+  tls_require_and_verify_client_cert = "true"
+}
+
+storage "gcs" {
+  bucket = "${GCS_BUCKET_NAME}"
+  ha_enabled = "true"
+}
+
+ui = true
+EOF
 ```

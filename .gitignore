@@ -1,2 +1,4 @@
 *.pem
 *.csr
+vault.hcl
+*.swp
