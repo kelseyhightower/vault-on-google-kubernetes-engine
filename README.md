@@ -45,10 +45,12 @@ VAULT_1_LOAD_BALANCER_IP=(gcloud compute addresses describe vault-1 \
   --global --format='value(address)')
 ```
 
+```
 declare -A ADDRESSES
 ADDRESSES["vault"]=${VAULT_LOAD_BALANCER_IP}
 ADDRESSES["vault-0"]=${VAULT_0_LOAD_BALANCER_IP}
 ADDRESSES["vault-1"]=${VAULT_1_LOAD_BALANCER_IP}
+```
 
 ### Create GCS bucket:
 
