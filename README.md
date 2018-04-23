@@ -266,6 +266,12 @@ Create the Vault services
 kubectl apply -f services
 ```
 
+```
+service "vault-0" created
+service "vault-1" created
+service "vault" created
+```
+
 ### Initialize Vault
 
 At this point both vault instances will report back not ready.
