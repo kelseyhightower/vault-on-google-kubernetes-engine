@@ -240,3 +240,21 @@ source vault-0.env
 ```
 vault operator init
 ```
+
+Unseal Vault:
+
+```
+source vault-0.env
+```
+
+```
+vault operator unseal
+```
+
+```
+source vault-1.env
+```
+
+```
+vault operator unseal
+```
