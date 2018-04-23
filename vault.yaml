@@ -4,17 +4,12 @@ metadata:
   name: vault
 spec:
   type: LoadBalancer
+  loadBalancerIP: ${VAULT_LOAD_BALANCER_IP}
   ports:
     - name: http
       port: 8200
-      protocol: "TCP"
     - name: server
       port: 8201
-      protocol: "TCP"
-    - name: ui
-      port: 443
-      protocol: "TCP"
-      targetPort: 8200
   selector:
     app: vault
 ---
@@ -23,18 +18,13 @@ kind: Service
 metadata:
   name: vault-0
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: ${VAULT_0_LOAD_BALANCER_IP}
   ports:
     - name: http
       port: 8200
-      protocol: "TCP"
     - name: server
       port: 8201
-      protocol: "TCP"
-    - name: ui
-      port: 443
-      protocol: "TCP"
-      targetPort: 8200
   selector:
     app: vault
     instance: "0"
@@ -44,18 +34,13 @@ kind: Service
 metadata:
   name: vault-1
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: ${VAULT_1_LOAD_BALANCER_IP}
   ports:
     - name: http
       port: 8200
-      protocol: "TCP"
     - name: server
       port: 8201
-      protocol: "TCP"
-    - name: ui
-      port: 443
-      protocol: "TCP"
-      targetPort: 8200
   selector:
     app: vault
     instance: "1"

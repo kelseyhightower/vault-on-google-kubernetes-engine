@@ -31,19 +31,24 @@ gcloud compute addresses create vault-1 --global
 ```
 
 ```
-VAULT_ADDRESS=(gcloud compute addresses describe vault \
+VAULT_LOAD_BALANCER_IP=(gcloud compute addresses describe vault \
   --global --format='value(address)')
 ```
 
 ```
-VAULT_0_ADDRESS=(gcloud compute addresses describe vault-0 \
+VAULT_0_LOAD_BALANCER_IP=(gcloud compute addresses describe vault-0 \
   --global --format='value(address)')
 ```
 
 ```
-VAULT_1_ADDRESS=(gcloud compute addresses describe vault-1 \
+VAULT_1_LOAD_BALANCER_IP=(gcloud compute addresses describe vault-1 \
   --global --format='value(address)')
 ```
+
+declare -A ADDRESSES
+ADDRESSES["vault"]=${VAULT_LOAD_BALANCER_IP}
+ADDRESSES["vault-0"]=${VAULT_0_LOAD_BALANCER_IP}
+ADDRESSES["vault-1"]=${VAULT_1_LOAD_BALANCER_IP}
 
 ### Create GCS bucket:
 
@@ -101,7 +106,7 @@ cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname="vault,vault.default.svc.cluster.local,0.vault.default.svc.cluster.local,1.vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_ADDRESS},${VAULT_0_ADDRESS},${VAULT_1_ADDRESS}" \
+  -hostname="vault,vault.default.svc.cluster.local,0.vault.default.svc.cluster.local,1.vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_LOAD_BALANCER_IP},${VAULT_0_LOAD_BALANCER_IP},${VAULT_1_LOAD_BALANCER_IP}" \
   -profile=default \
   vault-csr.json | cfssljson -bare vault
 ```
@@ -149,18 +154,46 @@ kubectl create configmap vault --from-file vault.hcl
 
 ```
 kubectl create configmap vault-0 \
-  --from-literal api-addr=https://${VAULT_0_ADDRESS}:8200
+  --from-literal api-addr=https://${VAULT_0_LOAD_BALANCER_IP}:8200
 ```
 
 ```
 kubectl create configmap vault-1 \
-  --from-literal api-addr=https://${VAULT_1_ADDRESS}:8200
+  --from-literal api-addr=https://${VAULT_1_LOAD_BALANCER_IP}:8200
 ```
 
 ### Deploy Vault
 
 ```
 kubectl apply -f vault.yaml
+```
+
+```
+mkdir services
+```
+
+```
+for k in "${!ADDRESSES[@]}"; do
+cat > services/${k}.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${k}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${ADDRESSES[$k]}
+  ports:
+    - name: http
+      port: 8200
+    - name: server
+      port: 8201
+  selector:
+    app: vault
+EOF
+```
+
+```
+kubectl apply -f services
 ```
 
 Initialize Vault:
