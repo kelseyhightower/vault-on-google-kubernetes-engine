@@ -293,11 +293,11 @@ A [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/con
 readinessProbe:
   exec:
     command:
-	  - vault
-	  - status
-	  - -client-cert=/etc/vault/tls/vault.pem
-	  - -client-key=/etc/vault/tls/vault-key.pem
-	  - -ca-cert=/etc/vault/tls/ca.pem
+      - vault
+      - status
+      - -client-cert=/etc/vault/tls/vault.pem
+      - -client-key=/etc/vault/tls/vault-key.pem
+      - -ca-cert=/etc/vault/tls/ca.pem
   initialDelaySeconds: 5
   periodSeconds: 30
 ```
