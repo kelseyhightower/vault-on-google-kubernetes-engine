@@ -4,3 +4,4 @@ vault.hcl
 *.swp
 service-account.json
 services
+vault-load-balancer.yaml

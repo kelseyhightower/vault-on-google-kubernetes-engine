@@ -237,9 +237,8 @@ At this point both vault instances are running, but not ready:
 kubectl get pods
 ```
 ```
-NAME                       READY     STATUS    RESTARTS   AGE
-vault-0-XXXXXXXXX-XXXXX    0/1       Running   0          1m
-vault-1-XXXXXXXXX-XXXXX    0/1       Running   0          1m
+NAME      READY     STATUS    RESTARTS   AGE
+vault-0   0/1       Running   0          1m
 ```
 
 A [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes) is used to ensure Vault instances are not routed traffic when they are [sealed](https://www.vaultproject.io/docs/concepts/seal.html).
