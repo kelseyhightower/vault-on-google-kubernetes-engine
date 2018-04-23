@@ -233,30 +233,60 @@ EOF
 kubectl apply -f services
 ```
 
-Initialize Vault:
+### Initialize Vault
+
+At this point both vault instances will report back not ready.
+
+In a new terminal set up a port forward to `vault-0`:
 
 ```
-source vault-0.env
+kubectl port-forward $(kubectl get pods -l instance=0 \
+  -o jsonpath={.items[0].metadata.name}) \
+  8200:8200
+```
+
+```
+source vault-port-forward.env
 ```
 
 ```
 vault operator init
 ```
 
-Unseal Vault:
+With Vault initialized unseal the `vault-0` instance:
 
 ```
-source vault-0.env
+vault operator unseal
+```
+
+Switch back to the tab where `kubectl port-foward` is running and kill it
+
+```
+^C
+```
+
+Next we need to unseal the `vault-1` instance.
+
+Set up a port forward to `vault-1`:
+
+```
+kubectl port-forward $(kubectl get pods -l instance=0 \
+  -o jsonpath={.items[0].metadata.name}) \
+  8200:8200
+```
+
+In a new tab unseal the `vault-1` instance:
+
+```
+source vault-port-forward.env
 ```
 
 ```
 vault operator unseal
 ```
 
-```
-source vault-1.env
-```
+At this point both vault instances should running. You can now source the `vault.env` script to configure the vault CLI to use the load balancer:
 
 ```
-vault operator unseal
+source vault.env
 ```
