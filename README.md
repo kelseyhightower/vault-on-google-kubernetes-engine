@@ -1,5 +1,12 @@
 # Vault on Google Kubernetes Engine
 
+This tutorial walks you through provisioning a two node [HashiCorp Vault](https://www.vaultproject.io/intro/index.html) cluster on Google Kubernetes Engine(https://cloud.google.com/kubernetes-engine)
+
+## Cluster Features
+
+* High Availability - The Vault cluster will be provisioned in [multi-server mode](https://www.vaultproject.io/docs/concepts/ha.html) for high availability.
+* Google Cloud Storage Storage Backend - Vault's data is persisted in [Google Cloud Storage](https://cloud.google.com/storage).
+
 ## Tutorial
 
 Gather configuration information:
