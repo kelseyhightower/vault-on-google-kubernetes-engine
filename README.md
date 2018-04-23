@@ -139,8 +139,6 @@ Generate the `vault.hcl` configuration file and store it in the `vault` configma
 
 ```
 cat > vault.hcl <<EOF
-disable_mlock = true
-
 listener "tcp" {
   address = "0.0.0.0:8200"
   tls_cert_file = "/etc/vault/tls/vault.pem"
