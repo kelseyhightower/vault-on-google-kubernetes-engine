@@ -16,11 +16,37 @@ COMPUTE_ZONE=$(gcloud config get-value compute/zone)
 GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
 ```
 
+### Provision IP Address
+
 ```
-VAULT_HOSTNAME="vault.hightowerlabs.com"
+gcloud compute addresses create vault --global
 ```
 
-Create GCS bucket:
+```
+gcloud compute addresses create vault-0 --global
+```
+
+```
+gcloud compute addresses create vault-1 --global
+```
+
+```
+VAULT_ADDRESS=(gcloud compute addresses describe vault \
+  --global --format='value(address)')
+```
+
+```
+VAULT_0_ADDRESS=(gcloud compute addresses describe vault-0 \
+  --global --format='value(address)')
+```
+
+```
+VAULT_1_ADDRESS=(gcloud compute addresses describe vault-1 \
+  --global --format='value(address)')
+```
+
+
+### Create GCS bucket:
 
 ```
 gsutil mb gs://${GCS_BUCKET_NAME}
@@ -76,7 +102,7 @@ cfssl gencert \
   -ca=ca.pem \
   -ca-key=ca-key.pem \
   -config=ca-config.json \
-  -hostname="vault,vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_HOSTNAME}" \
+  -hostname="vault,vault.default.svc.cluster.local,0.vault.default.svc.cluster.local,1.vault.default.svc.cluster.local,localhost,127.0.0.1,${VAULT_ADDRESS},${VAULT_0_ADDRESS},${VAULT_1_ADDRESS}" \
   -profile=default \
   vault-csr.json | cfssljson -bare vault
 ```
