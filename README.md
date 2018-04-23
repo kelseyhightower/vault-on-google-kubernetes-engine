@@ -204,6 +204,7 @@ spec:
   selector:
     app: vault
     instance: "0"
+  publishNotReadyAddresses: true
 EOF
 ```
 
@@ -224,6 +225,7 @@ spec:
   selector:
     app: vault
     instance: "1"
+  publishNotReadyAddresses: true
 EOF
 ```
 

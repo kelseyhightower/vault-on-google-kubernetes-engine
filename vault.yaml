@@ -6,6 +6,8 @@ metadata:
     app: vault
     instance: "0"
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: vault
@@ -48,6 +50,17 @@ spec:
             - name: server
               containerPort: 8201
               protocol: "TCP"
+          readinessProbe:
+            exec:
+              command:
+                - vault
+                - status
+                - -client-cert=/etc/vault/tls/vault.pem
+                - -client-key=/etc/vault/tls/vault-key.pem
+                - -ca-cert=/etc/vault/tls/ca.pem
+            initialDelaySeconds: 5
+            periodSeconds: 30
+
           resources:
             requests:
               cpu: "500m"
@@ -77,6 +90,8 @@ metadata:
     app: vault
     instance: "1"
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: vault
@@ -119,6 +134,16 @@ spec:
             - name: server
               containerPort: 8201
               protocol: "TCP"
+          readinessProbe:
+            exec:
+              command:
+                - vault
+                - status
+                - -client-cert=/etc/vault/tls/vault.pem
+                - -client-key=/etc/vault/tls/vault-key.pem
+                - -ca-cert=/etc/vault/tls/ca.pem
+            initialDelaySeconds: 5
+            periodSeconds: 30
           resources:
             requests:
               cpu: "500m"

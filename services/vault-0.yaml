@@ -13,3 +13,4 @@ spec:
   selector:
     app: vault
     instance: "0"
+  publishNotReadyAddresses: true
