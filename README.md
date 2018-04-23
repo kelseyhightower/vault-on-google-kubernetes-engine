@@ -49,6 +49,7 @@ gsutil iam ch \
 
 ```
 gcloud container clusters create vault \
+  --async \
   --enable-autorepair \
   --cluster-version 1.9.6-gke.1 \
   --machine-type n1-standard-2 \
