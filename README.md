@@ -234,7 +234,7 @@ kubectl apply -f services
 Initialize Vault:
 
 ```
-source vault.env
+source vault-0.env
 ```
 
 ```
