@@ -14,7 +14,7 @@ gcloud compute addresses delete vault vault-0 vault-1 \
 
 gcloud iam service-accounts delete vault-server@${PROJECT_ID}.iam.gserviceaccount.com
 
-rm *.pem
+rm *.pem *.csr
 
 gsutil rm -r gs://${PROJECT_ID}-vault-storage/*
 gsutil rb gs://${PROJECT_ID}-vault-storage
