@@ -31,17 +31,17 @@ gcloud compute addresses create vault-1 --global
 ```
 
 ```
-VAULT_LOAD_BALANCER_IP=(gcloud compute addresses describe vault \
+VAULT_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault \
   --global --format='value(address)')
 ```
 
 ```
-VAULT_0_LOAD_BALANCER_IP=(gcloud compute addresses describe vault-0 \
+VAULT_0_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-0 \
   --global --format='value(address)')
 ```
 
 ```
-VAULT_1_LOAD_BALANCER_IP=(gcloud compute addresses describe vault-1 \
+VAULT_1_LOAD_BALANCER_IP=$(gcloud compute addresses describe vault-1 \
   --global --format='value(address)')
 ```
 
