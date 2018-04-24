@@ -44,8 +44,16 @@ spec:
           image: gcr.io/hightowerlabs/vault-init
           imagePullPolicy: Always
           env:
-            - name: BUCKET_NAME
-              value: "hightowerlabs-vault-storage"
+            - name: GCS_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: gcs-bucket-name
+            - name: "KMS_KEY_ID"
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: kms-key-id
         - name: vault
           image: "vault:0.10.0"
           env:

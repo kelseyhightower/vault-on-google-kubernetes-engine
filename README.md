@@ -28,7 +28,11 @@ COMPUTE_REGION=$(gcloud config get-value compute/region)
 GCS_BUCKET_NAME="${PROJECT_ID}-vault-storage"
 ```
 
-### 
+```
+KMS_KEY_ID="projects/${PROJECT_ID}/locations/global/keyRings/vault/cryptoKeys/vault-init"
+```
+
+### Create KMS Keyring and Crypto Key
 
 ```
 gcloud kms keyrings create vault \
@@ -86,7 +90,6 @@ gcloud kms keys add-iam-policy-binding \
 
 ```
 gcloud container clusters create vault \
-  --async \
   --enable-autorepair \
   --cluster-version 1.9.6-gke.1 \
   --machine-type n1-standard-2 \
@@ -127,18 +130,6 @@ cfssl gencert \
 
 ### Deploy Vault
 
-```
-gcloud container clusters get-credentials vault
-```
-
-```
-gcloud container clusters list
-```
-```
-NAME   LOCATION    MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
-vault  us-west1-c  1.9.6-gke.1     XX.XXX.XXX.XXX  n1-standard-2  1.9.6-gke.1   3          RUNNING
-```
-
 Create `vault` secret to hold the Vault TLS certificates:
 
 ```
@@ -177,7 +168,9 @@ Create the `vault` configmap:
 ```
 kubectl create configmap vault \
   --from-file vault.hcl \
-  --from-literal api-addr=https://${VAULT_LOAD_BALANCER_IP}:8200
+  --from-literal api-addr=https://${VAULT_LOAD_BALANCER_IP}:8200 \
+  --from-literal gcs-bucket-name=${GCS_BUCKET_NAME} \
+  --from-literal kms-key-id=${KMS_KEY_ID}
 ```
 
 #### Create the Vault Deployments
@@ -226,16 +219,6 @@ service "vault-load-balancer" created
 ```
 
 ### Initialize Vault
-
-At this point both vault instances are running, but not ready:
-
-```
-kubectl get pods
-```
-```
-NAME      READY     STATUS    RESTARTS   AGE
-vault-0   0/1       Running   0          1m
-```
 
 A [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes) is used to ensure Vault instances are not routed traffic when they are [sealed](https://www.vaultproject.io/docs/concepts/seal.html).
 
