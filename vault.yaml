@@ -11,7 +11,6 @@ spec:
       port: 8201
   selector:
     app: vault
-  publishNotReadyAddresses: true
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -66,15 +65,12 @@ spec:
               containerPort: 8201
               protocol: "TCP"
           readinessProbe:
-            exec:
-              command:
-                - vault
-                - status
-                - -client-cert=/etc/vault/tls/vault.pem
-                - -client-key=/etc/vault/tls/vault-key.pem
-                - -ca-cert=/etc/vault/tls/ca.pem
+            httpGet:
+              path: "/v1/sys/health?standbyok=true"
+              port: 8200
+              scheme: HTTPS
             initialDelaySeconds: 5
-            periodSeconds: 30
+            periodSeconds: 10
           resources:
             requests:
               cpu: "500m"
