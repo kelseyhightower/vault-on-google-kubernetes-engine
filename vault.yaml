@@ -40,6 +40,12 @@ spec:
                       - vault
               topologyKey: kubernetes.io/hostname
       containers:
+        - name: vault-init
+          image: gcr.io/hightowerlabs/vault-init
+          imagePullPolicy: Always
+          env:
+            - name: BUCKET_NAME
+              value: "hightowerlabs-vault-storage"
         - name: vault
           image: "vault:0.10.0"
           env:
