@@ -6,7 +6,8 @@ This tutorial walks you through provisioning a two node [HashiCorp Vault](https:
 
 * High Availability - The Vault cluster will be provisioned in [multi-server mode](https://www.vaultproject.io/docs/concepts/ha.html) for high availability.
 * Google Cloud Storage Storage Backend - Vault's data is persisted in [Google Cloud Storage](https://cloud.google.com/storage).
-* Production Hardening - Vault is configured and deployed based on the guidence found in the [production hardening](https://www.vaultproject.io/guides/operations/production.html) guide.
+* Production Hardening - Vault is configured and deployed based on the guidance found in the [production hardening](https://www.vaultproject.io/guides/operations/production.html) guide.
+* Auto Initialization and Unsealing - Vault is automatically initialized and unsealed at runtime. Keys are encrypted using [Cloud KMS](https://cloud.google.com/kms) and stored in on [Google Cloud Storage](https://cloud.google.com/storage).
 
 ## Tutorial
 
