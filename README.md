@@ -194,10 +194,6 @@ statefulset "vault" created
 
 Create a directory to hold the Vault service configs:
 
-```
-mkdir services
-```
-
 Generate the `vault` service configuration that expose Vault using an external loadbalancer.
 
 ```
@@ -244,28 +240,6 @@ vault-0   0/1       Running   0          1m
 A [readiness probe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes) is used to ensure Vault instances are not routed traffic when they are [sealed](https://www.vaultproject.io/docs/concepts/seal.html).
 
 > Sealed Vault instances do not forward or redirect clients even in HA setups.
-
-```
-readinessProbe:
-  exec:
-    command:
-      - vault
-      - status
-      - -client-cert=/etc/vault/tls/vault.pem
-      - -client-key=/etc/vault/tls/vault-key.pem
-      - -ca-cert=/etc/vault/tls/ca.pem
-  initialDelaySeconds: 5
-  periodSeconds: 30
-```
-
-
-```
-vault operator unseal
-```
-
-```
-vault operator unseal
-```
 
 At this point both vault instances should running. You can now source the `vault.env` script to configure the vault CLI to use the load balancer:
 
