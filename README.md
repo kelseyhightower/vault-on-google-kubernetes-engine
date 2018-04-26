@@ -348,7 +348,7 @@ Download and decrypt the root token:
 
 ```
 export VAULT_TOKEN=$(gsutil cat gs://${GCS_BUCKET_NAME}/root-token.enc | \
-  base64 -d | \
+  base64 -D | \
   gcloud kms decrypt \
     --project ${PROJECT_ID} \
     --location global \
