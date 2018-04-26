@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8200
+    - name: server
+      port: 8201
+  selector:
+    app: vault
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  labels:
+    app: vault
+spec:
+  serviceName: "vault"
+  selector:
+    matchLabels:
+      app: vault
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - vault
+              topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: config
+          image: busybox
+          env:
+            - name: GCS_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: gcs-bucket-name
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cat > /etc/vault/config/vault.hcl <<EOF
+              listener "tcp" {
+                address = "0.0.0.0:8200"
+                tls_cert_file = "/etc/vault/tls/vault.pem"
+                tls_key_file = "/etc/vault/tls/vault-key.pem"
+                tls_min_version = "tls12"
+              }
+
+              storage "gcs" {
+                bucket = "${GCS_BUCKET_NAME}"
+                ha_enabled = "true"
+              }
+
+              ui = true
+              EOF
+
+          volumeMounts:
+            - name: vault-config
+              mountPath: /etc/vault/config
+      containers:
+        - name: vault-init
+          image: gcr.io/hightowerlabs/vault-init
+          imagePullPolicy: Always
+          env:
+            - name: CHECK_INTERVAL
+              value: "10"
+            - name: GCS_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: gcs-bucket-name
+            - name: "KMS_KEY_ID"
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: kms-key-id
+        - name: vault
+          image: "vault:0.10.0"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: "status.podIP"
+            - name: "VAULT_API_ADDR"
+              valueFrom:
+                configMapKeyRef:
+                  name: vault
+                  key: api-addr
+            - name: "VAULT_CLUSTER_ADDR"
+              value: "https://$(POD_IP):8201"
+          args:
+            - "server"
+            - "-config=/etc/vault/config/vault.hcl"
+          ports:
+            - name: http
+              containerPort: 8200
+              protocol: "TCP"
+            - name: server
+              containerPort: 8201
+              protocol: "TCP"
+          readinessProbe:
+            httpGet:
+              path: "/v1/sys/health?standbyok=true"
+              port: 8200
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          volumeMounts:
+            - name: vault-config
+              mountPath: /etc/vault/config
+            - name: vault-tls
+              mountPath: /etc/vault/tls
+      volumes:
+        - name: vault-config
+          emptyDir: {}
+        - name: vault-tls
+          secret:
+            secretName: vault
