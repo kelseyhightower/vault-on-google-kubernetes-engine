@@ -88,7 +88,7 @@ spec:
                   name: vault
                   key: kms-key-id
         - name: vault
-          image: "vault:0.10.0"
+          image: "vault:0.10.3"
           env:
             - name: POD_IP
               valueFrom:
