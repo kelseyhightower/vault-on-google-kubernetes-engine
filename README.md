@@ -361,6 +361,8 @@ export VAULT_TOKEN=$(gsutil cat gs://${GCS_BUCKET_NAME}/root-token.enc | \
 
 #### Working with Secrets
 
+The following examples assume Vault 0.10 or later.
+
 ```
 vault secrets enable -version=2 kv
 ```
