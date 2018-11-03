@@ -139,7 +139,7 @@ Create the `vault` Kubernetes cluster:
 ```
 gcloud container clusters create vault \
   --enable-autorepair \
-  --cluster-version 1.9.6-gke.1 \
+  --cluster-version 1.11.2-gke.9 \
   --machine-type n1-standard-2 \
   --service-account vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
   --num-nodes 3 \
@@ -254,14 +254,17 @@ In a typical deployment Vault must be initialized and unsealed before it can be 
 kubectl logs vault-0 -c vault-init
 ```
 ```
-2018/04/25 01:52:11 Starting the vault-init service...
-2018/04/25 01:52:21 Vault is not initialized. Initializing and unsealing...
-2018/04/25 01:52:28 Encrypting unseal keys and the root token...
-2018/04/25 01:52:29 Unseal keys written to gs://vault-1524618541915-vault-storage/unseal-keys.json.enc
-2018/04/25 01:52:29 Root token written to gs://vault-1524618541915-vault-storage/root-token.enc
-2018/04/25 01:52:29 Initialization complete.
-2018/04/25 01:52:30 Unseal complete.
-2018/04/25 01:52:30 Next check in 10s
+2018/11/03 22:37:35 Starting the vault-init service...
+2018/11/03 22:37:35 Get https://127.0.0.1:8200/v1/sys/health: dial tcp 127.0.0.1:8200: connect: connection refused
+2018/11/03 22:37:45 Vault is not initialized. Initializing and unsealing...
+2018/11/03 22:37:53 Encrypting unseal keys and the root token...
+2018/11/03 22:37:53 Unseal keys written to gs://vault-1541283682815-vault-storage/unseal-keys.json.enc
+2018/11/03 22:37:53 Root token written to gs://vault-1541283682815-vault-storage/root-token.enc
+2018/11/03 22:37:53 Initialization complete.
+2018/11/03 22:37:55 Unseal complete.
+2018/11/03 22:37:55 Next check in 10s
+2018/11/03 22:38:05 Vault is initialized and unsealed.
+2018/11/03 22:38:05 Next check in 10s
 ```
 
 The `vault-init` container runs every 10 seconds and ensures each vault instance is automatically unsealed.
@@ -330,16 +333,17 @@ vault status
 Key                    Value
 ---                    -----
 Seal Type              shamir
+Initialized            true
 Sealed                 false
-Total Shares           1
-Threshold              1
-Version                0.10.0
-Cluster Name           vault-cluster-06e44047
-Cluster ID             05d31509-8c61-c1a9-3289-0003513b26a5
+Total Shares           5
+Threshold              3
+Version                0.11.4
+Cluster Name           vault-cluster-46821b83
+Cluster ID             dcd56552-27d0-fa18-4ccc-25b252464971
 HA Enabled             true
 HA Cluster             https://XX.XX.X.X:8201
 HA Mode                standby
-Active Node Address    https://XX.XXX.XX.XXX:8200
+Active Node Address    https://XX.XXX.XXX.XX:8200
 ```
 
 #### Logging in
@@ -361,7 +365,7 @@ export VAULT_TOKEN=$(gsutil cat gs://${GCS_BUCKET_NAME}/root-token.enc | \
 
 #### Working with Secrets
 
-The following examples assume Vault 0.10 or later.
+The following examples assume Vault 0.11 or later.
 
 ```
 vault secrets enable -version=2 kv
