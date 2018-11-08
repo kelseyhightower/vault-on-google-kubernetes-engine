@@ -1,6 +1,6 @@
 # Vault on Google Kubernetes Engine
 
-This tutorial walks you through provisioning a multi-node [HashiCorp Vault](https://www.vaultproject.io/intro/index.html) cluster on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine).
+This tutorial walks you through provisioning a multi-node [HashiCorp Vault](https://www.vaultproject.io) cluster on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine).
 
 ## Cluster Features
 
