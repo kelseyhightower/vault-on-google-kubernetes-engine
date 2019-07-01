@@ -18,7 +18,7 @@ In this section you will create a new GCP project and enable the APIs required b
 Generate a project ID:
 
 ```
-PROJECT_ID="vault-$(($(date +%s%N)/1000000))"
+PROJECT_ID="vault-$(($(date +%s%d)/1000000))"
 ```
 
 Create a new GCP project:
