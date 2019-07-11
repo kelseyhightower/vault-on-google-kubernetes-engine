@@ -139,7 +139,7 @@ Create the `vault` Kubernetes cluster:
 ```
 gcloud container clusters create vault \
   --enable-autorepair \
-  --cluster-version 1.11.2-gke.9 \
+  --cluster-version 1.11.2-gke.15 \
   --machine-type n1-standard-2 \
   --service-account vault-server@${PROJECT_ID}.iam.gserviceaccount.com \
   --num-nodes 3 \
