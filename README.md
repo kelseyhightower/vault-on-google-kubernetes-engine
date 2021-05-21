@@ -192,6 +192,51 @@ cfssl gencert \
   vault-csr.json | cfssljson -bare vault
 ```
 
+---
+
+Another option is using the [Kubernetes certificates API](https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/#create-a-certificate-signing-request):
+
+```
+cat <<EOF | cfssl genkey - | cfssljson -bare vault
+{
+  "hosts": [
+    "vault",
+    "vault.default.svc.cluster.local",
+    "localhost",
+    "127.0.0.1",
+    "${VAULT_LOAD_BALANCER_IP}"
+  ],
+  "CN": "vault-server",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}
+EOF
+
+cat <<EOF | kubectl create -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: vault-server
+spec:
+  groups:
+  - system:authenticated
+  request: $(cat vault.csr | base64 | tr -d '\n')
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+EOF
+
+kubectl certificate approve vault-server
+kubectl get csr vault-server -o jsonpath='{.status.certificate}' |base64 --decode > vault.pem
+
+# Fetch the CA certificate of the GKE Kubernetes Cluster
+gcloud container clusters describe vault --zone=${COMPUTE_ZONE} --format='value(masterAuth.clusterCaCertificate)' |base64 --decode > ca.pem
+```
+
 ### Deploy Vault
 
 In this section you will deploy the multi-node Vault cluster using a collection of Kubernetes and application configuration files.
